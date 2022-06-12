@@ -28,6 +28,7 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlalchemy.sql.elements import ClauseElement
+from sqlalchemy.orm.util import class_mapper
 from starlette.requests import Request
 from starlette.responses import StreamingResponse
 from wtforms import Field, Form
@@ -72,7 +73,7 @@ class ModelAdminMeta(type):
                 f"Class {model.__name__} is not a SQLAlchemy model."
             )
 
-        assert len(mapper.primary_key) == 1, "Multiple PK columns not supported."
+        # assert len(mapper.primary_key) == 1, "Multiple PK columns not supported."
 
         cls.pk_column = mapper.primary_key[0]
         cls.identity = slugify_class_name(model.__name__)
@@ -141,7 +142,6 @@ class ModelAdmin(BaseModelAdmin, metaclass=ModelAdminMeta):
     sessionmaker: ClassVar[sessionmaker]
     engine: ClassVar[Union[Engine, AsyncEngine]]
     async_engine: ClassVar[bool]
-    url_path_for: ClassVar[Callable]
 
     # Metadata
     name: ClassVar[str] = ""
@@ -208,28 +208,6 @@ class ModelAdmin(BaseModelAdmin, metaclass=ModelAdminMeta):
         ```python
         class UserAdmin(ModelAdmin, model=User):
             column_exclude_list = [User.id, User.name]
-        ```
-    """
-
-    column_formatters: ClassVar[
-        Dict[Union[str, InstrumentedAttribute], Callable[[type, Column], Any]]
-    ] = {}
-    """Dictionary of list view column formatters.
-    Columns can either be string names or SQLAlchemy columns.
-
-    ???+ example
-        ```python
-        class UserAdmin(ModelAdmin, model=User):
-            column_formatters = {User.name: lambda m, a: m.name[:10]}
-        ```
-
-    The format function has the prototype:
-    ???+ formatter
-        ```python
-        def formatter(model, attribute):
-            # `model` is model instance
-            # `attribute` is a Union[Column, ColumnProperty, RelationshipProperty]
-            pass
         ```
     """
 
@@ -302,28 +280,6 @@ class ModelAdmin(BaseModelAdmin, metaclass=ModelAdminMeta):
         ```python
         class UserAdmin(ModelAdmin, model=User):
             column_details_exclude_list = [User.mail]
-        ```
-    """
-
-    column_formatters_detail: ClassVar[
-        Dict[Union[str, InstrumentedAttribute], Callable[[type, Column], Any]]
-    ] = {}
-    """Dictionary of details view column formatters.
-    Columns can either be string names or SQLAlchemy columns.
-
-    ???+ example
-        ```python
-        class UserAdmin(ModelAdmin, model=User):
-            column_formatters_detail = {User.name: lambda m, a: m.name[:10]}
-        ```
-
-    The format function has the prototype:
-    ???+ formatter
-        ```python
-        def formatter(model, attribute):
-            # `model` is model instance
-            # `attribute` is a Union[Column, ColumnProperty, RelationshipProperty]
-            pass
         ```
     """
 
@@ -496,18 +452,6 @@ class ModelAdmin(BaseModelAdmin, metaclass=ModelAdminMeta):
             if isinstance(attr, RelationshipProperty)
         ]
 
-        column_formatters = getattr(self, "column_formatters", {})
-        self._list_formatters = {
-            self.get_model_attr(attr): formatter
-            for (attr, formatter) in column_formatters.items()
-        }
-
-        column_formatters_detail = getattr(self, "column_formatters_detail", {})
-        self._detail_formatters = {
-            self.get_model_attr(attr): formatter
-            for (attr, formatter) in column_formatters_detail.items()
-        }
-
         self._form_attrs = self.get_form_columns()
 
         self._export_attrs = self.get_export_columns()
@@ -521,6 +465,11 @@ class ModelAdmin(BaseModelAdmin, metaclass=ModelAdminMeta):
             getattr(self.model, self.get_model_attr(attr).key)
             for attr in self.column_sortable_list or []
         ]
+
+    def _get_pk(self, model) -> Any:
+        pk_column_name = inspect(type(model)).primary_key[0].name
+        pk_column_name = pk_column_name if hasattr(model, pk_column_name) else 'id'
+        return getattr(model, pk_column_name)
 
     def _run_query_sync(self, stmt: ClauseElement) -> Any:
         with self.sessionmaker(expire_on_commit=False) as session:
@@ -555,6 +504,8 @@ class ModelAdmin(BaseModelAdmin, metaclass=ModelAdminMeta):
                 if name in relationships and isinstance(value, list):
                     # Load relationship objects into session
                     session.add_all(value)
+                elif name in relationships and self._get_pk(getattr(result, name)) == self._get_pk(value):
+                    continue
                 setattr(result, name, value)
 
     def _get_column_python_type(self, column: Column) -> type:
@@ -562,39 +513,6 @@ class ModelAdmin(BaseModelAdmin, metaclass=ModelAdminMeta):
             return column.type.python_type
         except NotImplementedError:
             return str
-
-    def _url_for_details(self, obj: Any) -> str:
-        pk = getattr(obj, inspect(obj).mapper.primary_key[0].name)
-        return self.url_path_for(
-            "admin:details",
-            identity=slugify_class_name(obj.__class__.__name__),
-            pk=pk,
-        )
-
-    def _url_for_edit(self, obj: Any) -> str:
-        pk = getattr(obj, inspect(obj).mapper.primary_key[0].name)
-        return self.url_path_for(
-            "admin:edit",
-            identity=slugify_class_name(obj.__class__.__name__),
-            pk=pk,
-        )
-
-    def _url_for_delete(self, obj: Any) -> str:
-        pk = getattr(obj, inspect(obj).mapper.primary_key[0].name)
-        return self.url_path_for(
-            "admin:delete",
-            identity=slugify_class_name(obj.__class__.__name__),
-            pk=pk,
-        )
-
-    def _url_for_details_with_attr(self, obj: Any, attr: RelationshipProperty) -> str:
-        target = getattr(obj, attr.key)
-        pk = getattr(target, attr.mapper.primary_key[0].name)
-        return self.url_path_for(
-            "admin:details",
-            identity=slugify_class_name(target.__class__.__name__),
-            pk=pk,
-        )
 
     async def count(self) -> int:
         stmt = select(func.count(self.pk_column))
@@ -666,30 +584,33 @@ class ModelAdmin(BaseModelAdmin, metaclass=ModelAdminMeta):
     ) -> Any:
         if isinstance(attr, Column):
             return getattr(obj, attr.name)
+        else:
+            return self._stringify_value(getattr(obj, attr.key))
 
-        value = getattr(obj, attr.key)
-        if isinstance(value, Enum):
+    def _stringify_value(self, value) -> str:
+        if self._is_sql_model(value):
+            return self._get_relation_link(value)
+        elif isinstance(value, list):
+            items = map(self._stringify_value, value)
+            return ", ".join(items)
+        elif isinstance(value, Enum):
             return value.value
-
         return value
 
-    def get_list_value(
-        self, obj: type, attr: Union[Column, ColumnProperty, RelationshipProperty]
-    ) -> Any:
-        """Get instancee values for the list view."""
-        formatter = self._list_formatters.get(attr)
-        if formatter:
-            return formatter(obj, attr)
-        return self.get_attr_value(obj, attr)
+    def _is_sql_model(self, model) -> bool:
+        try:
+            class_mapper(type(model))
+            return True
+        except:
+            return False
 
-    def get_detail_value(
-        self, obj: type, attr: Union[Column, ColumnProperty, RelationshipProperty]
-    ) -> Any:
-        """Get instancee values for the detail view."""
-        formatter = self._detail_formatters.get(attr)
-        if formatter:
-            return formatter(obj, attr)
-        return self.get_attr_value(obj, attr)
+    def _get_relation_link(self, model) -> str:
+        base_url = '/admin'
+        id = self._get_pk(model)
+        cls_name = type(model).__name__
+        model_slug = slugify_class_name(type(model).__name__)
+        url = f'{base_url}/{model_slug}/details/{id}'
+        return f'<a href="{url}">{model}</a>'
 
     def get_model_attr(
         self, attr: Union[str, InstrumentedAttribute]
@@ -746,7 +667,7 @@ class ModelAdmin(BaseModelAdmin, metaclass=ModelAdminMeta):
         return self._build_column_list(
             include=column_list,
             exclude=column_exclude_list,
-            default=lambda: [getattr(self.model, self.pk_column.name).prop],
+            default=lambda: [self._get_pk(self.model).prop],
         )
 
     def get_details_columns(self) -> List[Tuple[str, Column]]:

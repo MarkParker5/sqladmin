@@ -1,3 +1,78 @@
-.table thead th {
-    text-transform: none;
+@import 'https://fonts.googleapis.com/css?family=Open+Sans';
+
+* {
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+body {
+	background-color: #222;
+	color: #eee;
+}
+
+.simple-print {
+	fill: white;
+	stroke: white;
+}
+
+.simple-close {
+	color: white;
+	border-color: white;
+}
+
+.simple-ext-info {
+	border-top: 1px solid #aaa;
+}
+
+hr {
+	background-color: #d8d8d8;
+}
+
+aside,
+[class *= "sidebar"],
+[id *= "sidebar"] {
+	border-right: 1px solid #888;
+}
+
+[class=btn] {
+  color: #ccc;
+  border: 1px solid #777;
+}
+
+[class=btn]: hover {
+  color: #666;
+  border: 1px solid #333;
+}
+
+.dropdown-toggle {
+  color: #cacaca;
+  background: #222;
+}
+
+.dropdown-toggle:hover {
+	color: #cacaca;
+	background: #333;
+}
+
+.dropdown-menu.show {
+	color: #cacaca;
+	background: #222;
+}
+
+input[type=checkbox] {
+  background-color: #444;
+}
+
+input.form-control, select.form-control, select.form-control>option {
+	background-color: #444;
+	border: 1px solid #000;
+}
+
+fieldset input.form-control:focus, select.form-control:focus {
+	background-color: #444;
+	border: 1px solid #999;
+}
+
+select.form-control>option {
+	font-size: 110%;
 }

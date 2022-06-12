@@ -7,9 +7,11 @@
     <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/fontawesome.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/solid.min.css') }}">
     <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/main.css') }}">
+    <link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet"/>
+    <link href="{{ url_for('admin:statics', path='css/chosen-dark.css') }}" rel="stylesheet"/>
     {% block head %}
     {% endblock %}
-    <title>{{ title }}</title>
+    <title>{{ admin_title }}</title>
   </head>
   <body>
     {% block body %}
@@ -24,6 +26,10 @@
     <script type="text/javascript" src="{{ url_for('admin:statics', path='js/bootstrap.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('admin:statics', path='js/moment.min.js') }}"></script>
     <script type="text/javascript" src="{{ url_for('admin:statics', path='js/main.js') }}"></script>
+    <script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
+    <script type="text/javascript">
+      $("select").chosen()
+    </script>
     {% block tail %}
     {% endblock %}
   </body>
