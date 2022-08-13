@@ -108,8 +108,8 @@ class ModelConverterBase:
             assert len(prop.columns) == 1, "Multiple-column properties not supported"
             column = prop.columns[0]
 
-            if column.primary_key:
-                return
+            # if column.primary_key:
+            #     return
 
             default = getattr(column, "default", None)
 
@@ -245,7 +245,7 @@ class ModelConverter(ModelConverterBase):
         field_args["validators"].append(validators.MacAddress())
         return StringField(**field_args)
 
-    @converts("sqlalchemy.dialects.postgresql.base.UUID")
+    @converts("sqlalchemy.dialects.postgresql.base.UUID", 'sqlalchemy_utils.types.uuid.UUIDType')
     def conv_PgUuid(self, field_args: Dict, **kwargs: Any) -> Field:
         field_args.setdefault("label", "UUID")
         field_args["validators"].append(validators.UUID())
