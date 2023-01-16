@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-    <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/tabler.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/fontawesome.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/solid.min.css') }}">
-    <link rel="stylesheet" href="{{ url_for('admin:statics', path='css/main.css') }}">
+    <link rel="stylesheet" href="{{ https_url_for('admin:statics', path='css/tabler.min.css') }}">
+    <link rel="stylesheet" href="{{ https_url_for('admin:statics', path='css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ https_url_for('admin:statics', path='css/solid.min.css') }}">
+    <link rel="stylesheet" href="{{ https_url_for('admin:statics', path='css/main.css') }}">
     <link href="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.min.css" rel="stylesheet"/>
-    <link href="{{ url_for('admin:statics', path='css/chosen-dark.css') }}" rel="stylesheet"/>
+    <link href="{{ https_url_for('admin:statics', path='css/chosen-dark.css') }}" rel="stylesheet"/>
     {% block head %}
     {% endblock %}
     <title>{{ admin_title }}</title>
@@ -20,12 +20,12 @@
       {% endblock %}
     </main>
     {% endblock %}
-    <script type="text/javascript" src="{{ url_for('admin:statics', path='js/jquery.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('admin:statics', path='js/tabler.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('admin:statics', path='js/popper.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('admin:statics', path='js/bootstrap.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('admin:statics', path='js/moment.min.js') }}"></script>
-    <script type="text/javascript" src="{{ url_for('admin:statics', path='js/main.js') }}"></script>
+    <script type="text/javascript" src="{{ https_url_for('admin:statics', path='js/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ https_url_for('admin:statics', path='js/tabler.min.js') }}"></script>
+    <script type="text/javascript" src="{{ https_url_for('admin:statics', path='js/popper.min.js') }}"></script>
+    <script type="text/javascript" src="{{ https_url_for('admin:statics', path='js/bootstrap.min.js') }}"></script>
+    <script type="text/javascript" src="{{ https_url_for('admin:statics', path='js/moment.min.js') }}"></script>
+    <script type="text/javascript" src="{{ https_url_for('admin:statics', path='js/main.js') }}"></script>
     <script src="https://cdn.rawgit.com/harvesthq/chosen/gh-pages/chosen.jquery.min.js"></script>
     <script type="text/javascript">
       $("select").chosen()
