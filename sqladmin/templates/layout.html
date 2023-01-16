@@ -4,7 +4,7 @@
   <aside class="navbar navbar-vertical navbar-expand-md navbar-dark">
     <div class="container-fluid">
       <h1 class="navbar-brand navbar-brand-autodark">
-        <a href="{{ https_url_for('admin:index') }}">
+        <a href="{{ url_for('admin:index') }}">
         {% if admin_logo_url %}
         <img src="{{ admin_logo_url }}" width="64" height="64" alt="Admin" class="navbar-brand-image"/>
         {% else %}
@@ -18,7 +18,7 @@
           {% for model_admin in model_admins %}
             {% if model_admin.is_visible(request) and model_admin.is_accessible(request) %}
               <li class="nav-item">
-                <a class="nav-link {% if model_admin.identity == request.path_params['identity'] %}active{% endif %}" href="{{ https_url_for('admin:list', identity=model_admin.identity) }}">
+                <a class="nav-link {% if model_admin.identity == request.path_params['identity'] %}active{% endif %}" href="{{ url_for('admin:list', identity=model_admin.identity) }}">
                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                 {% if model_admin.icon %} <i class="{{ model_admin.icon }}"></i> {% endif %}
                 </span>

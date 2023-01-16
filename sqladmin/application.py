@@ -15,8 +15,6 @@ from starlette.templating import Jinja2Templates
 
 from .sidebar import SidebarLink
 
-from general import https_url_for
-
 if TYPE_CHECKING:
     from sqladmin.models import ModelAdmin
 
@@ -60,6 +58,10 @@ class BaseAdmin:
         self.templates.env.globals["admin_logo_url"] = logo_url
         self.templates.env.globals["model_admins"] = self.model_admins
         self.templates.env.globals["links"] = self.links
+        
+        def https_url_for(name, path):
+            return f'{base_url}/statics/{path}'
+        
         self.templates.env.globals["https_url_for"] = https_url_for
 
     @property
