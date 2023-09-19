@@ -27,4 +27,4 @@ mkdocstrings==0.18.1
 
 # Packaging
 twine==4.0.1
-wheel==0.37.1
+wheel==0.38.1
